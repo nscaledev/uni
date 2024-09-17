@@ -36,7 +36,7 @@ This can range from simple identity management e.g. creating users and cloud cre
 
 #### Kubernetes Service
 
-The [Kubernets Service](https://github.com/unikorn-cloud/kubernetes) provides Kubernetes-as-a-service on top of other previously described services.
+The [Kubernetes Service](https://github.com/unikorn-cloud/kubernetes) provides Kubernetes-as-a-service on top of other previously described services.
 
 #### Bare-metal Service
 
