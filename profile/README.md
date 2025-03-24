@@ -32,7 +32,7 @@ It also provides management of role-based access control by providing primitives
 #### Region Service
 
 The [Region Service](https://github.com/unikorn-cloud/region) provides cloud region discovery and infrastructure management in an abstract way.
-This can range from simple identity management e.g. creating users and cloud credentials, to infrastructure provisioning e.g. networks and virtual manchines, that can be leveraged by inidiviual services.
+This can range from simple identity management e.g. creating users and cloud credentials, to infrastructure provisioning e.g. networks and virtual machines, that can be leveraged by individual services.
 
 #### Kubernetes Service
 
@@ -64,4 +64,4 @@ The Application Service will provide managed application life-cycle management f
 
 #### Application Gateway
 
-THe Application Gateway will provide deeply integrated Kubenetes Application access leveraging the [Identitiy Service's](https://github.com/unikorn-cloud/identity) authentication and RBAC.
+The Application Gateway will provide deeply integrated Kubernetes Application access leveraging the [Identity Service's](https://github.com/unikorn-cloud/identity) authentication and RBAC.
