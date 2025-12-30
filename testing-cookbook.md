@@ -68,6 +68,15 @@ There's a few tactics we can use to put this code under test. Since
 the conversions are typically self-contained, they don't need extra
 scaffolding.
 
+**How to get started**
+
+ - Write a single test that checks `generate` for a minimal request
+   value. Make sure you are happy that the expected value makes sense
+   semantically (so you can't, for example, send a valid request that
+   creates an invalid resource)
+ - Turn it into a table test with one testcase
+ - Create helpers and builders for making further test cases, as needed
+
 **Round-tripping (or near round-tripping)**
 
 Usually the request type and the response type are at least similar,
@@ -82,7 +91,7 @@ things like:
 - zero out fields that appear in the response but not in the request,
   e.g., timestamps or generated identifiers;
 
-- compare field-by-field, when the request and response don't quite
+- compare field-by-field, when the request and response types don't quite
   line up
 
 But you only need to write the comparison once, and you can use it in
@@ -127,9 +136,14 @@ test for the API route with not much more work.** The latter is more
 valuable, because it will usually put more code under test, and it
 will make fewer assumptions about the implementation.
 
+**How to get started**
+
  - you may need to separate out the HTTP Handler for a set of routes,
    [uni-region/handler/images][image-handler-commit], to make it
    possible to test those routes in isolation
+ - define interfaces for the methods that the handler needs to call and mock them
+ - write a helper to construct the mock controller and the handler
+ - you will probably need to inject things into the `context.Context` -- look for similar tests
  - you can [call the handler methods directly][image-handler-call-method] with a http.NewRequest
  - use http.NewRecorder to capture responses ([ibid][])
 
