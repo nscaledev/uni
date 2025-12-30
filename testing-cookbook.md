@@ -124,6 +124,7 @@ Some useful tactics in the above example:
 - use a fake Kubernetes API client, and seed it with the fixture;
 - if there's a lot of complicated setup, [keep fixtures values in a
   struct][fixture-struct]
+- use [fake client interceptors][fake-interceptors] to test Kubernetes API error cases
 
 ### Testing sagas
 
@@ -155,3 +156,4 @@ will make fewer assumptions about the implementation.
 [image-handler-call-method]: https://github.com/nscaledev/uni-region/blob/fb26436b4d6823d5427e0b78d3e942c7b5512a01/pkg/handler/handler_image_test.go#L240
 [ibid]: https://github.com/nscaledev/uni-region/blob/fb26436b4d6823d5427e0b78d3e942c7b5512a01/pkg/handler/handler_image_test.go#L238
 [image-provider]: https://github.com/nscaledev/uni-region/blob/fb26436b4d6823d5427e0b78d3e942c7b5512a01/pkg/handler/image/image.go#L65
+[fake-client-interceptors]: https://github.com/nscaledev/uni-region/blob/63f373f0f1d3b353d9cc225eade636481d9dd0d1/pkg/handler/region/client_test.go
