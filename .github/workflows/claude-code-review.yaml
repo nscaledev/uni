@@ -1,7 +1,12 @@
 name: Claude Code Review
 
 on:
-  workflow_call: {}
+  workflow_call:
+    secrets:
+      CLAUDE_CODE_OAUTH_TOKEN:
+        description: A Claude Code access token. Supply this **or** ANTHROPIC_API_KEY.
+      ANTHROPIC_API_KEY:
+        description: An API key from the Anthropic console. Supply this **or** CLAUDE_CODE_OAUTH_TOKEN.
 
 jobs:
   claude-review:
@@ -23,13 +28,14 @@ jobs:
         uses: anthropics/claude-code-action@7145c3e0510bcdbdd29f67cc4a8c1958f1acfa2f # v1.0.27
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           track_progress: true
           # Direct prompt for automated review (no @claude mention needed)
           prompt: |
             REPO: ${{ github.repository }}
             PR NUMBER: ${{ github.event.pull_request.number }}
 
-            
+
 
           # Optional: Use sticky comments to make Claude reuse the same comment on subsequent pushes to the same PR
           use_sticky_comment: true
