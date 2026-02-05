@@ -35,7 +35,16 @@ jobs:
             REPO: ${{ github.repository }}
             PR NUMBER: ${{ github.event.pull_request.number }}
 
+            Please review this pull request. Draw on your experience as a seasoned, team-oriented
+            engineer.
 
+            You are evaluating the pull request as submitted, not elaborating on it.
+            Do not explain the content of the pull request, unless it is to explain what is missing.
+            Explain whether the pull request summary makes sense, and whether the change in the
+            pull request does what the summary says.
+
+            Give a concise, dispassionate summary of your evaluation, and the recommended next step.
+            Summarise the main pros and cons and support them with evidence.
 
           # Optional: Use sticky comments to make Claude reuse the same comment on subsequent pushes to the same PR
           use_sticky_comment: true
