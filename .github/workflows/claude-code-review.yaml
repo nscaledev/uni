@@ -1,0 +1,54 @@
+name: Claude Code Review
+
+on:
+  workflow_call:
+    secrets:
+      CLAUDE_CODE_OAUTH_TOKEN:
+        description: A Claude Code access token. Supply this **or** ANTHROPIC_API_KEY.
+      ANTHROPIC_API_KEY:
+        description: An API key from the Anthropic console. Supply this **or** CLAUDE_CODE_OAUTH_TOKEN.
+
+jobs:
+  claude-review:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+      issues: read
+      id-token: write # needed to get an OIDC access token for Claude to use
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@ff7abcd0c3c05ccf6adc123a8cd1fd4fb30fb493
+        with:
+          fetch-depth: 1
+
+      - name: Run Claude Code Review
+        id: claude-review
+        uses: anthropics/claude-code-action@7145c3e0510bcdbdd29f67cc4a8c1958f1acfa2f # v1.0.27
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          track_progress: true
+          # Direct prompt for automated review (no @claude mention needed)
+          prompt: |
+            REPO: ${{ github.repository }}
+            PR NUMBER: ${{ github.event.pull_request.number }}
+
+            Please review this pull request. Draw on your experience as a seasoned, team-oriented
+            engineer.
+
+            You are evaluating the pull request as submitted, not elaborating on it.
+            Do not explain the content of the pull request, unless it is to explain what is missing.
+            Explain whether the pull request summary makes sense, and whether the change in the
+            pull request does what the summary says.
+
+            Give a concise, dispassionate summary of your evaluation, and the recommended next step.
+            Summarise the main pros and cons and support them with evidence.
+
+          # Optional: Use sticky comments to make Claude reuse the same comment on subsequent pushes to the same PR
+          use_sticky_comment: true
+
+          # Configuration via CLI arguments
+          claude_args: |
+            --allowedTools Bash(make test-unit),Bash(make lint),Bash(make validate)
