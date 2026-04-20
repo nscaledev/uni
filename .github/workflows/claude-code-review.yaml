@@ -43,12 +43,11 @@ jobs:
             Explain whether the pull request summary makes sense, and whether the change in the
             pull request does what the summary says.
 
+            Assume that automated workflows will already be running tests, linting and validation, and
+            do not duplicate that effort.
+
             Give a concise, dispassionate summary of your evaluation, and the recommended next step.
             Summarise the main pros and cons and support them with evidence.
 
           # Optional: Use sticky comments to make Claude reuse the same comment on subsequent pushes to the same PR
           use_sticky_comment: true
-
-          # Configuration via CLI arguments
-          claude_args: |
-            --allowedTools Bash(make test-unit),Bash(make lint),Bash(make validate)
