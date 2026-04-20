@@ -51,4 +51,4 @@ jobs:
 
           # Configuration via CLI arguments
           claude_args: |
-            --allowedTools Bash(make test-unit),Bash(make lint),Bash(make validate)
+            --allowedTools "Bash(make test-unit),Bash(make lint),Bash(make validate)"
