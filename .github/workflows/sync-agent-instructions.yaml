@@ -1,0 +1,168 @@
+name: Sync agent instructions
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - agent-instructions/shared.md
+      - agent-instructions/targets.json
+      - scripts/sync-agent-instructions.sh
+      - scripts/test-sync-agent-instructions.sh
+      - .github/workflows/sync-agent-instructions.yaml
+  workflow_dispatch:
+
+concurrency:
+  group: sync-agent-instructions
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      has_targets: ${{ steps.targets.outputs.has_targets }}
+      matrix: ${{ steps.targets.outputs.matrix }}
+    steps:
+      - name: Checkout source repository
+        uses: actions/checkout@ff7abcd0c3c05ccf6adc123a8cd1fd4fb30fb493
+
+      - name: Test sync script
+        run: scripts/test-sync-agent-instructions.sh
+
+      - name: Validate targets and build matrix
+        id: targets
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          jq -e '
+            def nonempty_string: type == "string" and length > 0;
+
+            (.targets | type == "array") and
+            all(.targets[];
+              (.repository | nonempty_string) and
+              (.repository | test("^[^/]+/[^/]+$")) and
+              (.files | type == "object") and
+              (.files.agents | nonempty_string) and
+              (.files.claude | nonempty_string)
+            ) and
+            (([.targets[].repository] | length) ==
+              ([.targets[].repository] | unique | length))
+          ' agent-instructions/targets.json >/dev/null
+
+          matrix="$(
+            jq -c '{
+              include: [
+                .targets[] | {
+                  repository: .repository,
+                  repository_owner: (.repository | split("/")[0]),
+                  repository_name: (.repository | split("/")[1]),
+                  agents_path: .files.agents,
+                  claude_path: .files.claude
+                }
+              ]
+            }' agent-instructions/targets.json
+          )"
+          echo "has_targets=$(jq -r '.targets | length > 0' agent-instructions/targets.json)" >>"${GITHUB_OUTPUT}"
+          echo "matrix=${matrix}" >>"${GITHUB_OUTPUT}"
+
+  sync:
+    needs: prepare
+    if: needs.prepare.outputs.has_targets == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.prepare.outputs.matrix) }}
+    env:
+      AGENTS_PATH: ${{ matrix.agents_path }}
+      BRANCH_NAME: repo-sync/agent-instructions
+      CLAUDE_PATH: ${{ matrix.claude_path }}
+      TARGET_REPOSITORY: ${{ matrix.repository }}
+    steps:
+      - name: Checkout instruction source
+        uses: actions/checkout@ff7abcd0c3c05ccf6adc123a8cd1fd4fb30fb493
+        with:
+          path: source
+
+      - name: Create agent instruction sync app token
+        id: sync-token
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ vars.NSCALE_ACTIONS_APP_ID }}
+          private-key: ${{ secrets.NSCALE_ACTIONS_APP_PK }}
+          owner: ${{ matrix.repository_owner }}
+          repositories: ${{ matrix.repository_name }}
+          permission-contents: write
+          permission-pull-requests: write
+
+      - name: Checkout target repository
+        uses: actions/checkout@ff7abcd0c3c05ccf6adc123a8cd1fd4fb30fb493
+        with:
+          repository: ${{ matrix.repository }}
+          token: ${{ steps.sync-token.outputs.token }}
+          path: target
+          fetch-depth: 0
+
+      - name: Synchronise instructions
+        shell: bash
+        run: |
+          source/scripts/sync-agent-instructions.sh \
+            source/agent-instructions/shared.md \
+            target \
+            "${AGENTS_PATH}" \
+            "${CLAUDE_PATH}"
+
+      - name: Create or update pull request
+        shell: bash
+        env:
+          GH_TOKEN: ${{ steps.sync-token.outputs.token }}
+        run: |
+          set -euo pipefail
+
+          cd target
+
+          if [[ -z "$(git status --porcelain -- "${AGENTS_PATH}" "${CLAUDE_PATH}")" ]]; then
+            echo "Agent instructions are already up to date."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch -C "${BRANCH_NAME}"
+          git add -- "${AGENTS_PATH}" "${CLAUDE_PATH}"
+          git commit -m "Sync agent instructions"
+
+          remote_sha="$(
+            git ls-remote --heads origin "refs/heads/${BRANCH_NAME}" |
+              awk '{print $1}'
+          )"
+
+          if [[ -n "${remote_sha}" ]]; then
+            git push \
+              --force-with-lease="refs/heads/${BRANCH_NAME}:${remote_sha}" \
+              origin "HEAD:refs/heads/${BRANCH_NAME}"
+          else
+            git push origin "HEAD:refs/heads/${BRANCH_NAME}"
+          fi
+
+          existing_pr="$(
+            gh pr list \
+              --repo "${TARGET_REPOSITORY}" \
+              --head "${BRANCH_NAME}" \
+              --state open \
+              --json number \
+              --jq '.[0].number'
+          )"
+
+          if [[ -n "${existing_pr}" ]]; then
+            echo "Updated pull request #${existing_pr}."
+          else
+            gh pr create \
+              --repo "${TARGET_REPOSITORY}" \
+              --head "${BRANCH_NAME}" \
+              --title "Sync agent instructions" \
+              --body "Synchronises the centrally managed AGENTS.md section from ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/commit/${GITHUB_SHA}. Repository-specific instructions remain unchanged."
+          fi
