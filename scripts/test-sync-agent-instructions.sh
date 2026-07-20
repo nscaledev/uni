@@ -3,10 +3,9 @@
 set -euo pipefail
 
 readonly script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-readonly repository_root="$(cd "${script_dir}/.." && pwd)"
 readonly sync_script="${script_dir}/sync-agent-instructions.sh"
-readonly shared_file="${repository_root}/agent-instructions/shared.md"
 readonly fixture_root="$(mktemp -d /tmp/sync-agent-instructions.XXXXXX)"
+readonly shared_file="${fixture_root}/shared.md"
 
 cleanup() {
   rm -rf "$fixture_root"
@@ -26,12 +25,14 @@ run_sync() {
   "$sync_script" "$shared_file" "$1" AGENTS.md CLAUDE.md >/dev/null
 }
 
+printf '%s\n' '# Test shared instructions' 'Fixture content.' >"$shared_file"
+
 # Missing files are created, and a second run makes no changes.
 create_fixture="${fixture_root}/create"
 mkdir -p "$create_fixture"
 run_sync "$create_fixture"
 assert_line '<!-- BEGIN UNI SHARED INSTRUCTIONS -->' "${create_fixture}/AGENTS.md"
-assert_line '# Development Guidelines' "${create_fixture}/AGENTS.md"
+assert_line '# Test shared instructions' "${create_fixture}/AGENTS.md"
 assert_line '# Repository-specific instructions' "${create_fixture}/AGENTS.md"
 assert_line '@AGENTS.md' "${create_fixture}/CLAUDE.md"
 before="$(cksum "${create_fixture}/AGENTS.md" "${create_fixture}/CLAUDE.md")"

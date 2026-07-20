@@ -32,6 +32,10 @@ Each target is an object so target-specific options, such as shared overrides,
 can be added later without changing the overall structure. Only `repository`,
 `files.agents`, and `files.claude` are currently supported.
 
+Specification links in `shared.md` follow the latest `uni-specifications/main`
+content. Agents are required to stop without making changes if the applicable
+documents cannot be retrieved.
+
 ## Synchronisation behaviour
 
 The sync script replaces content between these exact markers:
