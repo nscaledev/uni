@@ -1,0 +1,11 @@
+{
+  "targets": [
+    {
+      "repository": "nscaledev/uni-shared-workflow-tester",
+      "files": {
+        "agents": "AGENTS.md",
+        "claude": "CLAUDE.md"
+      }
+    }
+  ]
+}
