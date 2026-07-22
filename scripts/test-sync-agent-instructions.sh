@@ -33,7 +33,9 @@ mkdir -p "$create_fixture"
 run_sync "$create_fixture"
 assert_line '<!-- BEGIN UNI SHARED INSTRUCTIONS -->' "${create_fixture}/AGENTS.md"
 assert_line '# Test shared instructions' "${create_fixture}/AGENTS.md"
-assert_line '# Repository-specific instructions' "${create_fixture}/AGENTS.md"
+[[ "$(tail -n 1 "${create_fixture}/AGENTS.md")" == \
+  '<!-- END UNI SHARED INSTRUCTIONS -->' ]] || \
+  fail 'new AGENTS.md contains content after the managed section'
 assert_line '@AGENTS.md' "${create_fixture}/CLAUDE.md"
 before="$(cksum "${create_fixture}/AGENTS.md" "${create_fixture}/CLAUDE.md")"
 run_sync "$create_fixture"

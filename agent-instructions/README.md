@@ -47,8 +47,7 @@ The sync script replaces content between these exact markers:
 
 The script follows these rules:
 
-- If `AGENTS.md` is missing, it creates the managed section and an empty
-  repository-specific section.
+- If `AGENTS.md` is missing, it creates only the managed section.
 - If `AGENTS.md` exists without markers, the managed section is prepended and
   all existing content is preserved as repository-specific guidance.
 - If either marker is already present, the file must contain exactly one
