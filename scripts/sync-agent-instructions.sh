@@ -64,7 +64,7 @@ if [[ ! -e "$agents_file" ]]; then
   {
     printf '%s\n' "$BEGIN_MARKER"
     awk '{ print }' "$shared_file"
-    printf '%s\n\n# Repository-specific instructions\n' "$END_MARKER"
+    printf '%s\n' "$END_MARKER"
   } >"$temporary_file"
   install_temporary_file "$agents_file"
   echo "created: $agents_file"
